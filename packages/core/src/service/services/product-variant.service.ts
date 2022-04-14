@@ -120,18 +120,50 @@ export class ProductVariantService {
     }
 
     findByIds(ctx: RequestContext, ids: ID[]): Promise<Array<Translated<ProductVariant>>> {
+        // console.log(`findByIds`, ids);
         return this.connection
             .findByIdsInChannel(ctx, ProductVariant, ids, ctx.channelId, {
                 relations: [
                     'options',
-                    'facetValues',
-                    'facetValues.facet',
+                    // 'facetValues',
+                    // 'facetValues.facet',
                     'taxCategory',
-                    'assets',
-                    'featuredAsset',
+                    // 'assets',
+                    // 'featuredAsset',
                 ],
             })
             .then(variants => this.applyPricesAndTranslateVariants(ctx, variants));
+    }
+
+    getVariantsIdsByProductId(
+        ctx: RequestContext,
+        productId: ID,
+        options: ListQueryOptions<ProductVariant> = {},
+    ): Promise<PaginatedList<ID>> {
+        const qb = this.listQueryBuilder
+            .build(ProductVariant, options, {
+                relations: [],
+                orderBy: { id: 'ASC' },
+                where: { deletedAt: null },
+                ctx,
+            })
+            .innerJoin('productvariant.channels', 'channel', 'channel.id = :channelId', {
+                channelId: ctx.channelId,
+            })
+            .innerJoin('productvariant.product', 'product', 'product.id = :productId', {
+                productId,
+            });
+
+        if (ctx.apiType === 'shop') {
+            qb.andWhere('productvariant.enabled = :enabled', { enabled: true });
+        }
+
+        return qb.getManyAndCount().then(async ([items, totalItems]) => {
+            return {
+                items: items.map(item => item.id),
+                totalItems,
+            };
+        });
     }
 
     getVariantsByProductId(

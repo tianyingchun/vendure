@@ -1,7 +1,8 @@
 import { Args, Info, Parent, ResolveField, Resolver } from '@nestjs/graphql';
 import { ProductVariantListOptions } from '@vendure/common/lib/generated-types';
 import { DEFAULT_CHANNEL_CODE } from '@vendure/common/lib/shared-constants';
-import { PaginatedList } from '@vendure/common/lib/shared-types';
+import { ID, PaginatedList } from '@vendure/common/lib/shared-types';
+import DataLoader from 'dataloader';
 
 import { Translated } from '../../../common/types/locale-types';
 import { idsAreEqual } from '../../../common/utils';
@@ -20,9 +21,11 @@ import { ProductVariantService } from '../../../service/services/product-variant
 import { ProductService } from '../../../service/services/product.service';
 import { ApiType } from '../../common/get-api-type';
 import { RequestContext } from '../../common/request-context';
+import { ProductVariantLoader } from '../../dataloaders/product-variant-loader';
 import { Api } from '../../decorators/api.decorator';
 import { RelationPaths, Relations } from '../../decorators/relations.decorator';
 import { Ctx } from '../../decorators/request-context.decorator';
+import { Loader } from '../../middleware/dataloader-interceptor';
 
 @Resolver('Product')
 export class ProductEntityResolver {
@@ -55,14 +58,15 @@ export class ProductEntityResolver {
         @Ctx() ctx: RequestContext,
         @Parent() product: Product,
         @Relations(ProductVariant) relations: RelationPaths<ProductVariant>,
+        @Loader(ProductVariantLoader.name) productVariantLoader: DataLoader<any, Translated<ProductVariant>>,
     ): Promise<Array<Translated<ProductVariant>>> {
-        const { items: variants } = await this.productVariantService.getVariantsByProductId(
+        const { items: variantIds } = await this.productVariantService.getVariantsIdsByProductId(
             ctx,
             product.id,
             {},
-            relations,
         );
-        return variants;
+        const loaderResult = await productVariantLoader.loadMany(variantIds);
+        return loaderResult as any;
     }
 
     @ResolveField()

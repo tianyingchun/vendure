@@ -11,7 +11,9 @@ import { ServiceModule } from '../service/service.module';
 
 import { AdminApiModule, ApiSharedModule, ShopApiModule } from './api-internal-modules';
 import { configureGraphQLModule } from './config/configure-graphql-module';
+import { ProductVariantLoader } from './dataloaders/product-variant-loader';
 import { AuthGuard } from './middleware/auth-guard';
+import { DataLoaderInterceptor } from './middleware/dataloader-interceptor';
 import { ExceptionLoggerFilter } from './middleware/exception-logger.filter';
 import { IdInterceptor } from './middleware/id-interceptor';
 import { TranslateErrorResultInterceptor } from './middleware/translate-error-result-interceptor';
@@ -51,6 +53,7 @@ import { ValidateCustomFieldsInterceptor } from './middleware/validate-custom-fi
         })),
     ],
     providers: [
+        ProductVariantLoader,
         {
             provide: APP_GUARD,
             useClass: AuthGuard,
@@ -70,6 +73,10 @@ import { ValidateCustomFieldsInterceptor } from './middleware/validate-custom-fi
         {
             provide: APP_FILTER,
             useClass: ExceptionLoggerFilter,
+        },
+        {
+            provide: APP_INTERCEPTOR,
+            useClass: DataLoaderInterceptor,
         },
     ],
 })

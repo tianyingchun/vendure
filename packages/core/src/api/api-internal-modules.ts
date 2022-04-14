@@ -11,6 +11,7 @@ import { ServiceModule } from '../service/service.module';
 import { ConfigurableOperationCodec } from './common/configurable-operation-codec';
 import { CustomFieldRelationResolverService } from './common/custom-field-relation-resolver.service';
 import { IdCodecService } from './common/id-codec.service';
+import { ProductVariantLoader } from './dataloaders/product-variant-loader';
 import { AdministratorResolver } from './resolvers/admin/administrator.resolver';
 import { AssetResolver } from './resolvers/admin/asset.resolver';
 import { AuthResolver } from './resolvers/admin/auth.resolver';
@@ -157,7 +158,12 @@ export const adminEntityResolvers = [
  */
 @Module({
     imports: [ConfigModule, ServiceModule, CacheModule, ConnectionModule.forRoot()],
-    providers: [IdCodecService, ConfigurableOperationCodec, CustomFieldRelationResolverService],
+    providers: [
+        IdCodecService,
+        ConfigurableOperationCodec,
+        CustomFieldRelationResolverService,
+        ProductVariantLoader,
+    ],
     exports: [
         IdCodecService,
         CacheModule,
@@ -166,6 +172,7 @@ export const adminEntityResolvers = [
         CustomFieldRelationResolverService,
         ServiceModule,
         ConnectionModule.forRoot(),
+        ProductVariantLoader,
     ],
 })
 export class ApiSharedModule {}
