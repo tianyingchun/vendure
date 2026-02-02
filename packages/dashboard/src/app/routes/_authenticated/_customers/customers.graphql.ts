@@ -10,6 +10,11 @@ export const customerListDocument = graphql(`
                 firstName
                 lastName
                 emailAddress
+                phoneNumber
+                groups {
+                    id
+                    name
+                }
                 user {
                     id
                     verified
@@ -167,6 +172,8 @@ export const customerHistoryDocument = graphql(`
             id
             createdAt
             updatedAt
+            firstName
+            lastName
             history(options: $options) {
                 totalItems
                 items {

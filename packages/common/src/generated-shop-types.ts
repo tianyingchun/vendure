@@ -130,6 +130,8 @@ export type AuthenticationResult = CurrentUser | InvalidCredentialsError | NotVe
 
 export type BooleanCustomFieldConfig = CustomField & {
     __typename?: 'BooleanCustomFieldConfig';
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     internal?: Maybe<Scalars['Boolean']['output']>;
     label?: Maybe<Array<LocalizedString>>;
@@ -203,6 +205,7 @@ export type Collection = Node & {
     parent?: Maybe<Collection>;
     parentId: Scalars['ID']['output'];
     position: Scalars['Int']['output'];
+    productVariantCount: Scalars['Int']['output'];
     productVariants: ProductVariantList;
     slug: Scalars['String']['output'];
     translations: Array<CollectionTranslation>;
@@ -230,6 +233,7 @@ export type CollectionFilterParameter = {
     name?: InputMaybe<StringOperators>;
     parentId?: InputMaybe<IdOperators>;
     position?: InputMaybe<NumberOperators>;
+    productVariantCount?: InputMaybe<NumberOperators>;
     slug?: InputMaybe<StringOperators>;
     updatedAt?: InputMaybe<DateOperators>;
 };
@@ -271,6 +275,7 @@ export type CollectionSortParameter = {
     name?: InputMaybe<SortOrder>;
     parentId?: InputMaybe<SortOrder>;
     position?: InputMaybe<SortOrder>;
+    productVariantCount?: InputMaybe<SortOrder>;
     slug?: InputMaybe<SortOrder>;
     updatedAt?: InputMaybe<SortOrder>;
 };
@@ -758,6 +763,8 @@ export type CurrentUserChannel = {
 };
 
 export type CustomField = {
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     internal?: Maybe<Scalars['Boolean']['output']>;
     label?: Maybe<Array<LocalizedString>>;
@@ -884,6 +891,8 @@ export type DateRange = {
  */
 export type DateTimeCustomFieldConfig = CustomField & {
     __typename?: 'DateTimeCustomFieldConfig';
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     internal?: Maybe<Scalars['Boolean']['output']>;
     label?: Maybe<Array<LocalizedString>>;
@@ -1138,6 +1147,8 @@ export type FacetValueTranslation = {
 
 export type FloatCustomFieldConfig = CustomField & {
     __typename?: 'FloatCustomFieldConfig';
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     internal?: Maybe<Scalars['Boolean']['output']>;
     label?: Maybe<Array<LocalizedString>>;
@@ -1335,6 +1346,8 @@ export type InsufficientStockError = ErrorResult & {
 
 export type IntCustomFieldConfig = CustomField & {
     __typename?: 'IntCustomFieldConfig';
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     internal?: Maybe<Scalars['Boolean']['output']>;
     label?: Maybe<Array<LocalizedString>>;
@@ -1699,6 +1712,8 @@ export enum LanguageCode {
 
 export type LocaleStringCustomFieldConfig = CustomField & {
     __typename?: 'LocaleStringCustomFieldConfig';
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     internal?: Maybe<Scalars['Boolean']['output']>;
     label?: Maybe<Array<LocalizedString>>;
@@ -1715,6 +1730,8 @@ export type LocaleStringCustomFieldConfig = CustomField & {
 
 export type LocaleTextCustomFieldConfig = CustomField & {
     __typename?: 'LocaleTextCustomFieldConfig';
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     internal?: Maybe<Scalars['Boolean']['output']>;
     label?: Maybe<Array<LocalizedString>>;
@@ -3086,6 +3103,8 @@ export type RegisterCustomerInput = {
 
 export type RelationCustomFieldConfig = CustomField & {
     __typename?: 'RelationCustomFieldConfig';
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     entity: Scalars['String']['output'];
     internal?: Maybe<Scalars['Boolean']['output']>;
@@ -3292,6 +3311,8 @@ export enum SortOrder {
 
 export type StringCustomFieldConfig = CustomField & {
     __typename?: 'StringCustomFieldConfig';
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     internal?: Maybe<Scalars['Boolean']['output']>;
     label?: Maybe<Array<LocalizedString>>;
@@ -3345,6 +3366,8 @@ export type StringStructFieldConfig = StructField & {
 
 export type StructCustomFieldConfig = CustomField & {
     __typename?: 'StructCustomFieldConfig';
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     fields: Array<StructFieldConfig>;
     internal?: Maybe<Scalars['Boolean']['output']>;
@@ -3446,6 +3469,8 @@ export type TaxRateList = PaginatedList & {
 
 export type TextCustomFieldConfig = CustomField & {
     __typename?: 'TextCustomFieldConfig';
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     internal?: Maybe<Scalars['Boolean']['output']>;
     label?: Maybe<Array<LocalizedString>>;

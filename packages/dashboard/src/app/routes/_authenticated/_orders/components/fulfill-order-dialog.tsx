@@ -14,7 +14,7 @@ import { Input } from '@/vdb/components/ui/input.js';
 import { Label } from '@/vdb/components/ui/label.js';
 import { api } from '@/vdb/graphql/api.js';
 import { graphql } from '@/vdb/graphql/graphql.js';
-import { Trans, useLingui } from '@/vdb/lib/trans.js';
+import { Trans, useLingui } from '@lingui/react/macro';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ConfigurableOperationInput as ConfigurableOperationInputType } from '@vendure/common/lib/generated-types';
 import { useState } from 'react';
@@ -38,7 +38,7 @@ interface FulfillmentQuantity {
 }
 
 export function FulfillOrderDialog({ order, onSuccess }: Readonly<FulfillOrderDialogProps>) {
-    const { i18n } = useLingui();
+    const { t } = useLingui();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [open, setOpen] = useState(false);
     const [fulfillmentQuantities, setFulfillmentQuantities] = useState<{
@@ -73,16 +73,16 @@ export function FulfillOrderDialog({ order, onSuccess }: Readonly<FulfillOrderDi
         onSuccess: (result: any) => {
             const { addFulfillmentToOrder } = result;
             if (addFulfillmentToOrder.__typename === 'Fulfillment') {
-                toast(i18n.t('Successfully fulfilled order'));
+                toast(t`Successfully fulfilled order`);
                 onSuccess?.();
             } else {
-                toast(i18n.t('Failed to fulfill order'), {
+                toast(t`Failed to fulfill order`, {
                     description: addFulfillmentToOrder.message,
                 });
             }
         },
         onError: error => {
-            toast(i18n.t('Failed to fulfill order'), {
+            toast(t`Failed to fulfill order`, {
                 description: error instanceof Error ? error.message : 'Unknown error',
             });
         },
@@ -184,7 +184,7 @@ export function FulfillOrderDialog({ order, onSuccess }: Readonly<FulfillOrderDi
             form.reset();
             setFulfillmentQuantities({});
         } catch (error) {
-            toast(i18n.t('Failed to fulfill order'), {
+            toast(t`Failed to fulfill order`, {
                 description: error instanceof Error ? error.message : 'Unknown error',
             });
         } finally {
@@ -218,8 +218,8 @@ export function FulfillOrderDialog({ order, onSuccess }: Readonly<FulfillOrderDi
             >
                 <Trans>Fulfill order</Trans>
             </Button>
-            <Dialog open={open}>
-                <DialogContent className="sm:max-w-[600px]">
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col">
                     <DialogHeader>
                         <DialogTitle>
                             <Trans>Fulfill order</Trans>
@@ -234,9 +234,9 @@ export function FulfillOrderDialog({ order, onSuccess }: Readonly<FulfillOrderDi
                                 e.stopPropagation();
                                 form.handleSubmit(handleSubmit)(e);
                             }}
-                            className="space-y-4"
+                            className="space-y-4 flex-1 overflow-hidden flex flex-col"
                         >
-                            <div className="space-y-4">
+                            <div className="space-y-4 flex-1 overflow-y-auto">
                                 <div className="font-medium">
                                     <Trans>Order lines</Trans>
                                 </div>

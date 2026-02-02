@@ -4,12 +4,12 @@ import { useState } from 'react';
 import { DataTableBulkActionItem } from '@/vdb/components/data-table/data-table-bulk-action-item.js';
 import { AssignToChannelBulkAction } from '@/vdb/components/shared/assign-to-channel-bulk-action.js';
 import { usePriceFactor } from '@/vdb/components/shared/assign-to-channel-dialog.js';
-import { usePaginatedList } from '@/vdb/components/shared/paginated-list-data-table.js';
+import { usePaginatedList } from '@/vdb/hooks/use-paginated-list.js';
 import { RemoveFromChannelBulkAction } from '@/vdb/components/shared/remove-from-channel-bulk-action.js';
 import { BulkActionComponent } from '@/vdb/framework/extension-api/types/data-table.js';
 import { api } from '@/vdb/graphql/api.js';
 import { useChannel } from '@/vdb/hooks/use-channel.js';
-import { Trans } from '@/vdb/lib/trans.js';
+import { Trans } from '@lingui/react/macro';
 import { DeleteBulkAction } from '../../../../common/delete-bulk-action.js';
 import { DuplicateBulkAction } from '../../../../common/duplicate-bulk-action.js';
 import {
@@ -55,7 +55,7 @@ export const AssignProductsToChannelBulkAction: BulkActionComponent<any> = ({ se
 };
 
 export const RemoveProductsFromChannelBulkAction: BulkActionComponent<any> = ({ selection, table }) => {
-    const { selectedChannel } = useChannel();
+    const { activeChannel } = useChannel();
 
     return (
         <RemoveFromChannelBulkAction
@@ -66,7 +66,7 @@ export const RemoveProductsFromChannelBulkAction: BulkActionComponent<any> = ({ 
             requiredPermissions={['UpdateCatalog', 'UpdateProduct']}
             buildInput={() => ({
                 productIds: selection.map(s => s.id),
-                channelId: selectedChannel?.id,
+                channelId: activeChannel?.id,
             })}
         />
     );
@@ -108,12 +108,6 @@ export const DuplicateProductsBulkAction: BulkActionComponent<any> = ({ selectio
         <DuplicateBulkAction
             entityType="Product"
             duplicatorCode="product-duplicator"
-            duplicatorArguments={[
-                {
-                    name: 'includeVariants',
-                    value: 'true',
-                },
-            ]}
             requiredPermissions={['UpdateCatalog', 'UpdateProduct']}
             entityName="Product"
             selection={selection}

@@ -2,9 +2,6 @@
 title: "Digital Products"
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 Digital products include things like ebooks, online courses, and software. They are products that are delivered to the customer electronically, and do not require
 physical shipping.
 
@@ -13,7 +10,7 @@ This guide will show you how you can add support for digital products to Vendure
 ## Creating the plugin
 
 :::info
-The complete source of the following example plugin can be found here: [example-plugins/digital-products](https://github.com/vendure-ecommerce/vendure/tree/master/packages/dev-server/example-plugins/digital-products)
+The complete source of the following example plugin can be found here: [example-plugins/digital-products](https://github.com/vendurehq/vendure/tree/master/packages/dev-server/example-plugins/digital-products)
 :::
 
 ### Define custom fields
@@ -43,7 +40,7 @@ export class DigitalProductsPlugin {}
 
 :::note
 You will need to **create a migration** after adding this custom field.
-See the [Migrations](/guides/developer-guide/migrations/) guide for more information.
+See the [Migrations](/developer-guide/migrations/) guide for more information.
 :::
 
 We will also define a custom field on the `ShippingMethod` entity to indicate that this shipping method is only available for digital products:
@@ -282,7 +279,7 @@ export const digitalOrderProcess: OrderProcess<string> = {
 
 ### Complete plugin & add to config
 
-The complete plugin can be found here: [example-plugins/digital-products](https://github.com/vendure-ecommerce/vendure/tree/master/packages/dev-server/example-plugins/digital-products)
+The complete plugin can be found here: [example-plugins/digital-products](https://github.com/vendurehq/vendure/tree/master/packages/dev-server/example-plugins/digital-products)
 
 We can now add the plugin to the VendureConfig:
 
@@ -302,7 +299,7 @@ const config: VendureConfig = {
 
 ## Create the ShippingMethod
 
-Once these parts have been defined and bundled up in a Vendure plugin, we can create a new ShippingMethod via the Admin UI, and
+Once these parts have been defined and bundled up in a Vendure plugin, we can create a new ShippingMethod via the Dashboard, and
 make sure to check the "isDigital" custom field, and select the custom fulfillment handler and eligibility checker:
 
 ![Create ShippingMethod](./shipping-method.webp)

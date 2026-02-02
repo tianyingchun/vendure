@@ -9,18 +9,44 @@ import { getOperationVariablesFields } from '../document-introspection/get-docum
 import { createFormSchemaFromFields, getDefaultValuesFromFields } from './form-schema-tools.js';
 import { removeEmptyIdFields, transformRelationFields } from './utils.js';
 
+export type WithLooseCustomFields<T> = T extends { customFields?: any }
+    ? Omit<T, 'customFields'> & { customFields?: T['customFields'] | unknown }
+    : T;
+
+/**
+ * @description
+ * Options for the useGeneratedForm hook.
+ *
+ * @docsCategory detail-views
+ * @docsPage useGeneratedForm
+ * @since 3.3.0
+ */
 export interface GeneratedFormOptions<
     T extends TypedDocumentNode<any, any>,
     VarName extends keyof VariablesOf<T> | undefined = 'input',
     E extends Record<string, any> = Record<string, any>,
 > {
+    /**
+     * @description
+     * The document to use to generate the form.
+     */
     document?: T;
+    /**
+     * @description
+     * The name of the variable to use in the document.
+     */
     varName?: VarName;
+    /**
+     * @description
+     * The entity to use to generate the form.
+     */
     entity: E | null | undefined;
     customFieldConfig?: any[]; // Add custom field config for validation
     setValues: (
         entity: NonNullable<E>,
-    ) => VarName extends keyof VariablesOf<T> ? VariablesOf<T>[VarName] : VariablesOf<T>;
+    ) => WithLooseCustomFields<
+        VarName extends keyof VariablesOf<T> ? VariablesOf<T>[VarName] : VariablesOf<T>
+    >;
     onSubmit?: (
         values: VarName extends keyof VariablesOf<T> ? VariablesOf<T>[VarName] : VariablesOf<T>,
     ) => void;
@@ -32,6 +58,30 @@ export interface GeneratedFormOptions<
  * It will create a form with the fields defined in the document's input type.
  * It will also create a submit handler that will submit the form to the server.
  *
+ * This hook is mostly used internally by the higher-level {@link useDetailPage} hook,
+ * but can in some cases be useful to use directly.
+ *
+ * @example
+ * ```tsx
+ * const { form, submitHandler } = useGeneratedForm({
+ *  document: setDraftOrderCustomFieldsDocument,
+ *  varName: undefined,
+ *  entity: entity,
+ *  setValues: entity => {
+ *    return {
+ *      orderId: entity.id,
+ *      input: {
+ *        customFields: entity.customFields,
+ *      },
+ *    };
+ *  },
+ * });
+ * ```
+ *
+ * @docsCategory detail-views
+ * @docsPage useGeneratedForm
+ * @since 3.3.0
+ * @docsWeight 0
  */
 export function useGeneratedForm<
     T extends TypedDocumentNode<any, any>,
@@ -48,9 +98,13 @@ export function useGeneratedForm<
     const defaultValues = getDefaultValuesFromFields(updateFields, activeChannel?.defaultLanguageCode);
     const processedEntity = ensureTranslationsForAllLanguages(entity, availableLanguages, defaultValues);
 
+    // Also ensure defaultValues has translations for all languages (for creation case)
+    const processedDefaultValues =
+        ensureTranslationsForAllLanguages(defaultValues, availableLanguages, defaultValues) ?? defaultValues;
+
     const values = processedEntity
         ? transformRelationFields(updateFields, setValues(processedEntity))
-        : defaultValues;
+        : processedDefaultValues;
 
     const form = useForm({
         resolver: async (values, context, options) => {
@@ -61,7 +115,7 @@ export function useGeneratedForm<
             return result;
         },
         mode: 'onChange',
-        defaultValues,
+        defaultValues: processedDefaultValues,
         values,
     });
     let submitHandler = (event: FormEvent): any => {

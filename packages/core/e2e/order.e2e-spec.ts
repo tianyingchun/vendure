@@ -257,8 +257,48 @@ describe('Orders resolver', () => {
             expect(result.order!.id).toBe('T_2');
         });
 
+        it('correctly resolves asset preview urls with edge-case query', async () => {
+            // This came up as a strange edge-case where the AssetInterceptorPlugin was unable to
+            // correctly transform the asset preview URL. It is not directly to do with Orders per se,
+            // but manifested when attempting an order-related query.
+            const result = await adminClient.query<Codegen.GetOrderQuery, Codegen.GetOrderQueryVariables>(
+                gql(`
+                    query OrderAssetEdgeCase($id: ID!) {
+                        order(id: $id) {
+                             lines {
+                               id
+                             }
+                            ...OrderDetail
+                        }
+                    }
+
+                    fragment OrderDetail on Order {
+                        id
+                        lines {
+                            ...OrderLine
+                        }
+                    }
+
+                    fragment OrderLine on OrderLine {
+                        id
+                        featuredAsset {
+                            preview
+                        }
+                    }
+                `),
+                {
+                    id: 'T_2',
+                },
+            );
+            expect(result.order!.lines.length).toBe(2);
+            expect(result.order!.lines.map(l => l.featuredAsset?.preview)).toEqual([
+                'test-url/test-assets/derick-david-409858-unsplash__preview.jpg',
+                'test-url/test-assets/derick-david-409858-unsplash__preview.jpg',
+            ]);
+        });
+
         it('order with calculated line properties', async () => {
-            const result = await adminClient.query<GetOrder.Query, GetOrder.Variables>(
+            const result = await adminClient.query<Codegen.GetOrderQuery, Codegen.GetOrderQueryVariables>(
                 gql`
                     query GetOrderWithLineCalculatedProps($id: ID!) {
                         order(id: $id) {
@@ -1832,7 +1872,7 @@ describe('Orders resolver', () => {
             ]);
         });
 
-        // https://github.com/vendure-ecommerce/vendure/issues/873
+        // https://github.com/vendurehq/vendure/issues/873
         it('can add another refund if the first one fails', async () => {
             const orderResult = await createTestOrder(
                 adminClient,
@@ -1879,7 +1919,7 @@ describe('Orders resolver', () => {
             expect(refund2.total).toBe(order.totalWithTax);
         });
 
-        // https://github.com/vendure-ecommerce/vendure/issues/2302
+        // https://github.com/vendurehq/vendure/issues/2302
         it('passes correct amount to createRefund function after cancellation', async () => {
             const orderResult = await createTestOrder(
                 adminClient,
@@ -2348,7 +2388,7 @@ describe('Orders resolver', () => {
             );
         });
 
-        // https://github.com/vendure-ecommerce/vendure/issues/847
+        // https://github.com/vendurehq/vendure/issues/847
         it('manual call to settlePayment works with multiple payments', async () => {
             const result = await createTestOrder(
                 adminClient,
@@ -2404,7 +2444,7 @@ describe('Orders resolver', () => {
         });
     });
 
-    // https://github.com/vendure-ecommerce/vendure/issues/2505
+    // https://github.com/vendurehq/vendure/issues/2505
     describe('updating order customer', () => {
         let orderId: string;
         let customerId: string;
@@ -2499,7 +2539,7 @@ describe('Orders resolver', () => {
     });
 
     describe('issues', () => {
-        // https://github.com/vendure-ecommerce/vendure/issues/639
+        // https://github.com/vendurehq/vendure/issues/639
         it('returns fulfillments for Order with no lines', async () => {
             await shopClient.asAnonymousUser();
             // Apply a coupon code just to create an active order with no OrderLines
@@ -2520,7 +2560,7 @@ describe('Orders resolver', () => {
             expect(order?.fulfillments).toEqual([]);
         });
 
-        // https://github.com/vendure-ecommerce/vendure/issues/603
+        // https://github.com/vendurehq/vendure/issues/603
         it('orders correctly resolves quantities and OrderItems', async () => {
             await shopClient.asAnonymousUser();
             const { addItemToOrder } = await shopClient.query<
@@ -2547,7 +2587,7 @@ describe('Orders resolver', () => {
             expect(orders.items[0].lines[0].quantity).toBe(2);
         });
 
-        // https://github.com/vendure-ecommerce/vendure/issues/716
+        // https://github.com/vendurehq/vendure/issues/716
         it('get an Order with a deleted ShippingMethod', async () => {
             const { createShippingMethod: shippingMethod } = await adminClient.query<
                 Codegen.CreateShippingMethodMutation,
@@ -2617,7 +2657,7 @@ describe('Orders resolver', () => {
             });
         });
 
-        // https://github.com/vendure-ecommerce/vendure/issues/868
+        // https://github.com/vendurehq/vendure/issues/868
         it('allows multiple refunds of same OrderLine', async () => {
             await shopClient.asUserWithCredentials(customers[0].emailAddress, password);
             const { addItemToOrder } = await shopClient.query<
@@ -2660,7 +2700,7 @@ describe('Orders resolver', () => {
             refundGuard.assertSuccess(refund2);
         });
 
-        // https://github.com/vendure-ecommerce/vendure/issues/1125
+        // https://github.com/vendurehq/vendure/issues/1125
         it('resolves deleted Product of OrderLine ProductVariants', async () => {
             await shopClient.asUserWithCredentials(customers[0].emailAddress, password);
             const { addItemToOrder } = await shopClient.query<
@@ -2698,7 +2738,7 @@ describe('Orders resolver', () => {
             ).toBe('gaming-pc');
         });
 
-        // https://github.com/vendure-ecommerce/vendure/issues/1508
+        // https://github.com/vendurehq/vendure/issues/1508
         it('resolves price of deleted ProductVariant of OrderLine', async () => {
             const { activeCustomer } = await shopClient.query<
                 CodegenShop.GetActiveCustomerWithOrdersProductPriceQuery,
@@ -2716,7 +2756,7 @@ describe('Orders resolver', () => {
             ).toBe(108720);
         });
 
-        // https://github.com/vendure-ecommerce/vendure/issues/2204
+        // https://github.com/vendurehq/vendure/issues/2204
         it('creates correct history entries and results in correct state when manually adding payment to order', async () => {
             await shopClient.asUserWithCredentials(customers[0].emailAddress, password);
             const { addItemToOrder } = await shopClient.query<
@@ -2761,7 +2801,7 @@ describe('Orders resolver', () => {
             expect(order!.state).toBe('PaymentSettled');
         });
 
-        // https://github.com/vendure-ecommerce/vendure/issues/2191
+        // https://github.com/vendurehq/vendure/issues/2191
         it('correctly transitions order & fulfillment on partial fulfillment being shipped', async () => {
             await shopClient.asUserWithCredentials(customers[0].emailAddress, password);
             const { addItemToOrder } = await shopClient.query<
@@ -2844,19 +2884,19 @@ describe('Orders resolver', () => {
                     {
                         productVariantId: 'T_2',
                         quantity: 999999, // Exceeds limit
-                    }
+                    },
                 ],
             });
-            const t1 = addItemsToOrder.order.lines.find(l => l.productVariant.id === 'T_1')
+            const t1 = addItemsToOrder.order.lines.find(l => l.productVariant.id === 'T_1');
             // Should have added 1 of T_1
             expect(t1?.quantity).toBe(1);
             // Should not have added T_2
-            const t2 = addItemsToOrder.order.lines.find(l => l.productVariant.id === 'T_2')
-            expect(t2).toBeUndefined(); 
+            const t2 = addItemsToOrder.order.lines.find(l => l.productVariant.id === 'T_2');
+            expect(t2).toBeUndefined();
             // Should have errors
             expect(addItemsToOrder.errorResults.length).toBe(1);
-            expect(addItemsToOrder.errorResults[0].errorCode).toBe('ORDER_LIMIT_ERROR')
-            expect(addItemsToOrder.errorResults[0].message).toBe('ORDER_LIMIT_ERROR')
+            expect(addItemsToOrder.errorResults[0].errorCode).toBe('ORDER_LIMIT_ERROR');
+            expect(addItemsToOrder.errorResults[0].message).toBe('ORDER_LIMIT_ERROR');
         });
     });
 });

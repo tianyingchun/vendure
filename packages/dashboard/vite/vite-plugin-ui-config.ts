@@ -7,6 +7,15 @@ import { ConfigLoaderApi, getConfigLoaderApi } from './vite-plugin-config-loader
 const virtualModuleId = 'virtual:vendure-ui-config';
 const resolvedVirtualModuleId = `\0${virtualModuleId}`;
 
+/**
+ * @description
+ * Options used by the {@link vendureDashboardPlugin} to configure how the Dashboard
+ * connects to the Vendure Admin API
+ *
+ * @docsCategory vite-plugin
+ * @docsPage vendureDashboardPlugin
+ * @since 3.4.0
+ */
 export interface ApiConfig {
     /**
      * @description
@@ -60,6 +69,15 @@ export interface ApiConfig {
     channelTokenKey?: string;
 }
 
+/**
+ * @description
+ * Options used by the {@link vendureDashboardPlugin} to configure aspects of the
+ * Dashboard UI behaviour.
+ *
+ * @docsCategory vite-plugin
+ * @docsPage vendureDashboardPlugin
+ * @since 3.4.0
+ */
 export interface I18nConfig {
     /**
      * @description
@@ -94,6 +112,34 @@ export interface I18nConfig {
     availableLocales?: string[];
 }
 
+/**
+ * @description
+ * Options used by the {@link vendureDashboardPlugin} to configure order-related
+ * Dashboard UI behaviour.
+ *
+ * @docsCategory vite-plugin
+ * @docsPage vendureDashboardPlugin
+ * @since 3.4.0
+ */
+export interface OrdersConfig {
+    /**
+     * @description
+     * An array of refund reasons to display in the refund order dialog.
+     * Each reason has a `value` (used as the identifier) and a `label` (displayed to the user).
+     * If not provided, default reasons will be used.
+     */
+    refundReasons?: Array<{ value: string; label: string }>;
+}
+
+/**
+ * @description
+ * Options used by the {@link vendureDashboardPlugin} to configure aspects of the
+ * Dashboard UI behaviour.
+ *
+ * @docsCategory vite-plugin
+ * @docsPage vendureDashboardPlugin
+ * @since 3.4.0
+ */
 export interface UiConfigPluginOptions {
     /**
      * @description
@@ -105,6 +151,11 @@ export interface UiConfigPluginOptions {
      * Configuration for internationalization settings
      */
     i18n?: I18nConfig;
+    /**
+     * @description
+     * Configuration for order-related settings
+     */
+    orders?: OrdersConfig;
 }
 
 /**
@@ -124,6 +175,11 @@ export interface ResolvedUiConfig {
      * Note: defaultLocale remains optional as it can be undefined.
      */
     i18n: Required<Omit<I18nConfig, 'defaultLocale'>> & Pick<I18nConfig, 'defaultLocale'>;
+    /**
+     * @description
+     * Order-related settings with all defaults applied
+     */
+    orders: Required<OrdersConfig>;
 }
 
 /**
@@ -151,9 +207,7 @@ export function uiConfigPlugin(options: UiConfigPluginOptions = {}): Plugin {
                     const result = await configLoaderApi.getVendureConfig();
                     vendureConfig = result.vendureConfig;
                 }
-
                 const config = getUiConfig(vendureConfig, options);
-
                 return `
                     export const uiConfig = ${JSON.stringify(config)}
                 `;

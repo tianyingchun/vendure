@@ -1,5 +1,14 @@
-import { LanguageCode } from '@vendure/common/lib/generated-types';
-import { Asset, CustomFields, mergeConfig, TransactionalConnection } from '@vendure/core';
+import { CurrencyCode, LanguageCode } from '@vendure/common/lib/generated-types';
+import {
+    Asset,
+    CustomFields,
+    Logger,
+    mergeConfig,
+    OrderService,
+    ProductService,
+    RequestContextService,
+    TransactionalConnection,
+} from '@vendure/core';
 import { createTestEnvironment } from '@vendure/testing';
 import { fail } from 'assert';
 import gql from 'graphql-tag';
@@ -194,7 +203,7 @@ const customConfig = mergeConfig(testConfig(), {
             },
         ],
         // Single readonly Address custom field to test
-        // https://github.com/vendure-ecommerce/vendure/issues/3326
+        // https://github.com/vendurehq/vendure/issues/3326
         Address: [
             {
                 name: 'hereId',
@@ -779,7 +788,7 @@ describe('Custom fields', () => {
             }, 'async error'),
         );
 
-        // https://github.com/vendure-ecommerce/vendure/issues/1000
+        // https://github.com/vendurehq/vendure/issues/1000
         it(
             'supports validation of relation types',
             assertThrowsWithMessage(async () => {
@@ -796,7 +805,7 @@ describe('Custom fields', () => {
             }, 'relation error'),
         );
 
-        // https://github.com/vendure-ecommerce/vendure/issues/1091
+        // https://github.com/vendurehq/vendure/issues/1091
         it('handles well graphql internal fields', async () => {
             // throws "Cannot read property 'args' of undefined" if broken
             await adminClient.query(gql`
@@ -814,7 +823,7 @@ describe('Custom fields', () => {
             `);
         });
 
-        // https://github.com/vendure-ecommerce/vendure/issues/1953
+        // https://github.com/vendurehq/vendure/issues/1953
         describe('validation of OrderLine custom fields', () => {
             it('addItemToOrder', async () => {
                 try {
@@ -962,7 +971,7 @@ describe('Custom fields', () => {
             }, 'Cannot query field "internalString" on type "ProductCustomFields"'),
         );
 
-        // https://github.com/vendure-ecommerce/vendure/issues/3049
+        // https://github.com/vendurehq/vendure/issues/3049
         it('does not leak private fields via JSON type', async () => {
             const { collection } = await shopClient.query(gql`
                 query {
@@ -990,7 +999,7 @@ describe('Custom fields', () => {
             expect(products.totalItems).toBe(1);
         });
 
-        // https://github.com/vendure-ecommerce/vendure/issues/1581
+        // https://github.com/vendurehq/vendure/issues/1581
         it('can sort by localeString custom fields', async () => {
             const { products } = await adminClient.query(gql`
                 query {
@@ -1156,7 +1165,7 @@ describe('Custom fields', () => {
                 switch (customConfig.dbConnectionOptions.type) {
                     case 'mariadb':
                     case 'mysql':
-                        duplicateKeyErrMessage = "ER_DUP_ENTRY: Duplicate entry 'foo' for key";
+                        duplicateKeyErrMessage = "Duplicate entry 'foo' for key";
                         break;
                     case 'postgres':
                         duplicateKeyErrMessage = 'duplicate key value violates unique constraint';
@@ -1214,5 +1223,201 @@ describe('Custom fields', () => {
                 },
             },
         ]);
+    });
+
+    // https://github.com/vendurehq/vendure/issues/3909
+    it('persists custom fields when creating a new ProductVariantPrice', async () => {
+        // First, add EUR to the channel's available currencies
+        await adminClient.query(
+            gql`
+                mutation UpdateChannel($input: UpdateChannelInput!) {
+                    updateChannel(input: $input) {
+                        ... on Channel {
+                            id
+                            availableCurrencyCodes
+                        }
+                    }
+                }
+            `,
+            {
+                input: {
+                    id: 'T_1',
+                    availableCurrencyCodes: [CurrencyCode.USD, CurrencyCode.EUR],
+                },
+            },
+        );
+
+        // Now create a new price in EUR with custom fields
+        const { updateProductVariants } = await adminClient.query(
+            gql`
+                mutation UpdateProductVariants($input: [UpdateProductVariantInput!]!) {
+                    updateProductVariants(input: $input) {
+                        id
+                        prices {
+                            currencyCode
+                            price
+                            customFields {
+                                costPrice
+                            }
+                        }
+                    }
+                }
+            `,
+            {
+                input: [
+                    {
+                        id: 'T_1',
+                        prices: [
+                            {
+                                price: 129900,
+                                currencyCode: 'USD',
+                                customFields: {
+                                    costPrice: 100,
+                                },
+                            },
+                            {
+                                price: 99900,
+                                currencyCode: 'EUR',
+                                customFields: {
+                                    costPrice: 200,
+                                },
+                            },
+                        ],
+                    },
+                ],
+            },
+        );
+
+        expect(updateProductVariants[0].prices).toContainEqual({
+            currencyCode: 'EUR',
+            price: 99900,
+            customFields: {
+                costPrice: 200,
+            },
+        });
+    });
+
+    describe('setting custom fields directly via a service method', () => {
+        it('OrderService.addItemToOrder warns on unknown custom field', async () => {
+            const orderService = server.app.get(OrderService);
+            const requestContextService = server.app.get(RequestContextService);
+            const ctx = await requestContextService.create({
+                apiType: 'admin',
+            });
+
+            const order = await orderService.create(ctx);
+
+            const warnSpy = vi.spyOn(Logger, 'warn');
+
+            await orderService.addItemToOrder(ctx, order.id, 1, 1, {
+                customFieldWhichDoesNotExist: 'test value',
+            });
+
+            expect(warnSpy).toHaveBeenCalledWith(
+                'Custom field customFieldWhichDoesNotExist not found for entity OrderLine',
+            );
+        });
+
+        it('OrderService.addItemToOrder does not warn on known custom field', async () => {
+            const orderService = server.app.get(OrderService);
+            const requestContextService = server.app.get(RequestContextService);
+            const ctx = await requestContextService.create({
+                apiType: 'admin',
+            });
+
+            const order = await orderService.create(ctx);
+
+            const warnSpy = vi.spyOn(Logger, 'warn');
+
+            await orderService.addItemToOrder(ctx, order.id, 1, 1, {
+                validateInt: 1,
+            });
+
+            expect(warnSpy).not.toHaveBeenCalled();
+        });
+
+        it('OrderService.addItemToOrder warns on multiple unknown custom fields', async () => {
+            const orderService = server.app.get(OrderService);
+            const requestContextService = server.app.get(RequestContextService);
+            const ctx = await requestContextService.create({
+                apiType: 'admin',
+            });
+
+            const order = await orderService.create(ctx);
+
+            const warnSpy = vi.spyOn(Logger, 'warn');
+
+            await orderService.addItemToOrder(ctx, order.id, 1, 1, {
+                unknownField1: 'foo',
+                unknownField2: 'bar',
+            });
+
+            expect(warnSpy).toHaveBeenCalledWith('Custom field unknownField1 not found for entity OrderLine');
+            expect(warnSpy).toHaveBeenCalledWith('Custom field unknownField2 not found for entity OrderLine');
+        });
+
+        it('OrderService.addItemToOrder does not warn when no custom fields are provided', async () => {
+            const orderService = server.app.get(OrderService);
+            const requestContextService = server.app.get(RequestContextService);
+            const ctx = await requestContextService.create({
+                apiType: 'admin',
+            });
+
+            const order = await orderService.create(ctx);
+
+            const warnSpy = vi.spyOn(Logger, 'warn');
+
+            await orderService.addItemToOrder(ctx, order.id, 1, 1);
+
+            expect(warnSpy).not.toHaveBeenCalled();
+        });
+
+        it('warns on unknown custom field in ProductTranslation entity', async () => {
+            const productService = server.app.get(ProductService);
+            const requestContextService = server.app.get(RequestContextService);
+            const ctx = await requestContextService.create({
+                apiType: 'admin',
+            });
+            const warnSpy = vi.spyOn(Logger, 'warn');
+
+            await productService.create(ctx, {
+                translations: [
+                    {
+                        languageCode: LanguageCode.en,
+                        name: 'test',
+                        slug: 'test',
+                        description: '',
+                        customFields: { customFieldWhichDoesNotExist: 'foo' },
+                    },
+                ],
+            });
+
+            expect(warnSpy).toHaveBeenCalledWith(
+                'Custom field customFieldWhichDoesNotExist not found for entity ProductTranslation',
+            );
+        });
+
+        it('does not warn when Translation has a valid custom field', async () => {
+            const productService = server.app.get(ProductService);
+            const requestContextService = server.app.get(RequestContextService);
+            const ctx = await requestContextService.create({
+                apiType: 'admin',
+            });
+            const warnSpy = vi.spyOn(Logger, 'warn');
+
+            await productService.create(ctx, {
+                translations: [
+                    {
+                        languageCode: LanguageCode.en,
+                        name: 'test',
+                        slug: 'test',
+                        description: '',
+                        customFields: { localeStringWithDefault: 'foo' },
+                    },
+                ],
+            });
+
+            expect(warnSpy).not.toHaveBeenCalled();
+        });
     });
 });

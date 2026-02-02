@@ -13,6 +13,7 @@ import { SchedulerStrategy, TaskReport } from '../../scheduler/scheduler-strateg
 
 import { DEFAULT_SCHEDULER_PLUGIN_OPTIONS } from './constants';
 import { ScheduledTaskRecord } from './scheduled-task-record.entity';
+import { StaleTaskService } from './stale-task.service';
 import { DefaultSchedulerPluginOptions } from './types';
 
 /**
@@ -31,11 +32,13 @@ export class DefaultSchedulerStrategy implements SchedulerStrategy {
     private readonly tasks: Map<string, { task: ScheduledTask; isRegistered: boolean }> = new Map();
     private pluginOptions: DefaultSchedulerPluginOptions;
     private runningTasks: ScheduledTask[] = [];
+    private staleTaskService: StaleTaskService;
 
     init(injector: Injector) {
         this.connection = injector.get(TransactionalConnection);
         this.pluginOptions = injector.get(DEFAULT_SCHEDULER_PLUGIN_OPTIONS);
         this.injector = injector;
+        this.staleTaskService = injector.get(StaleTaskService);
 
         const runTriggerCheck =
             injector.get(ConfigService).schedulerOptions.runTasksInWorkerOnly === false ||
@@ -71,16 +74,10 @@ export class DefaultSchedulerStrategy implements SchedulerStrategy {
     executeTask(task: ScheduledTask) {
         return async (job?: Cron) => {
             await this.ensureTaskIsRegistered(task);
-            const taskEntity = await this.connection.rawConnection
-                .getRepository(ScheduledTaskRecord)
-                .createQueryBuilder('task')
-                .update()
-                .set({ lockedAt: new Date() })
-                .where('taskId = :taskId', { taskId: task.id })
-                .andWhere('lockedAt IS NULL')
-                .andWhere('enabled = TRUE')
-                .execute();
-            if (!taskEntity.affected) {
+            await this.staleTaskService.cleanStaleLocksForTask(task);
+
+            const lockAcquired = await this.tryAcquireLock(task);
+            if (!lockAcquired) {
                 return;
             }
 
@@ -231,6 +228,67 @@ export class DefaultSchedulerStrategy implements SchedulerStrategy {
         }
     }
 
+    /**
+     * Attempts to acquire a lock for the given task.
+     *
+     * For databases that support pessimistic locking (PostgreSQL, MySQL, MariaDB),
+     * we use SELECT ... FOR UPDATE to ensure only one worker can acquire the lock.
+     * This is necessary because PostgreSQL's MVCC can allow multiple concurrent
+     * UPDATE statements to succeed when using a simple "UPDATE ... WHERE lockedAt IS NULL" pattern.
+     *
+     * For databases that don't support pessimistic locking (SQLite, SQL.js),
+     * we fall back to the atomic UPDATE approach which works correctly for single-connection scenarios.
+     */
+    private async tryAcquireLock(task: ScheduledTask): Promise<boolean> {
+        const dbType = this.connection.rawConnection.options.type;
+        const supportsPessimisticLocking = ['postgres', 'mysql', 'mariadb'].includes(dbType);
+
+        if (supportsPessimisticLocking) {
+            // Use a transaction with pessimistic locking to ensure only one worker
+            // can acquire the lock.
+            return this.connection.rawConnection.transaction(async manager => {
+                // First, try to select the task row with a FOR UPDATE lock.
+                // This will block other transactions trying to select the same row
+                // until this transaction commits or rolls back.
+                const taskRecord = await manager
+                    .getRepository(ScheduledTaskRecord)
+                    .createQueryBuilder('task')
+                    .setLock('pessimistic_write')
+                    .where('task.taskId = :taskId', { taskId: task.id })
+                    .andWhere('task.lockedAt IS NULL')
+                    .andWhere('task.enabled = TRUE')
+                    .getOne();
+
+                if (!taskRecord) {
+                    // Task is either already locked, disabled, or doesn't exist
+                    return false;
+                }
+
+                // Now update the lock within the same transaction
+                await manager
+                    .getRepository(ScheduledTaskRecord)
+                    .update({ id: taskRecord.id }, { lockedAt: new Date() });
+
+                return true;
+            });
+        } else {
+            // For databases without pessimistic locking support (SQLite, SQL.js),
+            // use the atomic UPDATE approach. This works for single-connection scenarios
+            // but may have race conditions with multiple connections.
+            const result = await this.connection.rawConnection
+                .getRepository(ScheduledTaskRecord)
+                .createQueryBuilder('task')
+                .update()
+                .set({ lockedAt: new Date() })
+                .where('taskId = :taskId', { taskId: task.id })
+                .andWhere('lockedAt IS NULL')
+                .andWhere('enabled = TRUE')
+                .execute();
+
+            return !!result.affected;
+        }
+    }
+
     private async ensureTaskIsRegistered(taskOrId: ScheduledTask | string) {
         const taskId = typeof taskOrId === 'string' ? taskOrId : taskOrId.id;
         const task = this.tasks.get(taskId);
@@ -241,6 +299,9 @@ export class DefaultSchedulerStrategy implements SchedulerStrategy {
                 .insert()
                 .into(ScheduledTaskRecord)
                 .values({ taskId })
+                // Fix for versions lower than MariaDB v10.5 and MySQL: updateEntity(false) prevents TypeORM from
+                // using the RETURNING clause after an INSERT. Keep in mind that this query won't return the id of the inserted record.
+                .updateEntity(false)
                 .orIgnore()
                 .execute();
 

@@ -1,24 +1,26 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/vdb/components/ui/card.js';
 import { DashboardBaseWidgetProps } from '@/vdb/framework/extension-api/types/index.js';
-import { Trans } from '@/vdb/lib/trans.js';
 import { cn } from '@/vdb/lib/utils.js';
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { Trans } from '@lingui/react/macro';
+import { createContext, useEffect, useRef, useState } from 'react';
 
-type WidgetDimensions = {
+export type WidgetDimensions = {
     width: number;
     height: number;
 };
 
 export const WidgetContentContext = createContext<WidgetDimensions>({ width: 0, height: 0 });
 
-export const useWidgetDimensions = () => {
-    const context = useContext(WidgetContentContext);
-    if (!context) {
-        throw new Error('useWidgetDimensions must be used within a DashboardBaseWidget');
-    }
-    return context;
-};
-
+/**
+ * @description
+ * A wrapper component that should be used for any custom Insights page widgets.
+ * This ensures that your custom widget has all the basic functionality needed to be
+ * correctly rendered on the Insights page.
+ *
+ * @docsCategory extensions-api
+ * @docsPage widgets
+ * @since 3.3.0
+ */
 export function DashboardBaseWidget({
     id,
     config,
@@ -69,7 +71,7 @@ export function DashboardBaseWidget({
                 <CardHeader
                     ref={headerRef}
                     className={cn(
-                        'flex flex-row items-center',
+                        'flex flex-col lg:flex-row  items-start lg:items-center',
                         actions ? 'justify-between' : 'justify-start',
                     )}
                 >

@@ -20,6 +20,7 @@ export const collectionListDocument = graphql(
                     }
                     name
                     slug
+                    description
                     breadcrumbs {
                         id
                         name
@@ -27,13 +28,12 @@ export const collectionListDocument = graphql(
                     }
                     children {
                         id
+                        name
                     }
                     position
                     isPrivate
                     parentId
-                    productVariants {
-                        totalItems
-                    }
+                    productVariantCount
                 }
                 totalItems
             }
@@ -161,6 +161,7 @@ export const moveCollectionDocument = graphql(`
     mutation MoveCollection($input: MoveCollectionInput!) {
         moveCollection(input: $input) {
             id
+            position
         }
     }
 `);

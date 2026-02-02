@@ -315,6 +315,8 @@ export type AuthenticationMethod = Node & {
 export type AuthenticationResult = CurrentUser | InvalidCredentialsError;
 
 export type BooleanCustomFieldConfig = CustomField & {
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     internal?: Maybe<Scalars['Boolean']['output']>;
     label?: Maybe<Array<LocalizedString>>;
@@ -487,6 +489,7 @@ export type Collection = Node & {
     parent?: Maybe<Collection>;
     parentId: Scalars['ID']['output'];
     position: Scalars['Int']['output'];
+    productVariantCount: Scalars['Int']['output'];
     productVariants: ProductVariantList;
     slug: Scalars['String']['output'];
     translations: Array<CollectionTranslation>;
@@ -515,6 +518,7 @@ export type CollectionFilterParameter = {
     name?: InputMaybe<StringOperators>;
     parentId?: InputMaybe<IdOperators>;
     position?: InputMaybe<NumberOperators>;
+    productVariantCount?: InputMaybe<NumberOperators>;
     slug?: InputMaybe<StringOperators>;
     updatedAt?: InputMaybe<DateOperators>;
 };
@@ -554,6 +558,7 @@ export type CollectionSortParameter = {
     name?: InputMaybe<SortOrder>;
     parentId?: InputMaybe<SortOrder>;
     position?: InputMaybe<SortOrder>;
+    productVariantCount?: InputMaybe<SortOrder>;
     slug?: InputMaybe<SortOrder>;
     updatedAt?: InputMaybe<SortOrder>;
 };
@@ -1319,6 +1324,8 @@ export type CurrentUserChannel = {
 };
 
 export type CustomField = {
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     internal?: Maybe<Scalars['Boolean']['output']>;
     label?: Maybe<Array<LocalizedString>>;
@@ -1524,6 +1531,8 @@ export type DateRange = {
  * See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/datetime-local#Additional_attributes
  */
 export type DateTimeCustomFieldConfig = CustomField & {
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     internal?: Maybe<Scalars['Boolean']['output']>;
     label?: Maybe<Array<LocalizedString>>;
@@ -1859,6 +1868,8 @@ export type FacetValueTranslationInput = {
 };
 
 export type FloatCustomFieldConfig = CustomField & {
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     internal?: Maybe<Scalars['Boolean']['output']>;
     label?: Maybe<Array<LocalizedString>>;
@@ -2066,6 +2077,8 @@ export type InsufficientStockOnHandError = ErrorResult & {
 };
 
 export type IntCustomFieldConfig = CustomField & {
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     internal?: Maybe<Scalars['Boolean']['output']>;
     label?: Maybe<Array<LocalizedString>>;
@@ -2534,6 +2547,8 @@ export type LanguageNotAvailableError = ErrorResult & {
 };
 
 export type LocaleStringCustomFieldConfig = CustomField & {
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     internal?: Maybe<Scalars['Boolean']['output']>;
     label?: Maybe<Array<LocalizedString>>;
@@ -2549,6 +2564,8 @@ export type LocaleStringCustomFieldConfig = CustomField & {
 };
 
 export type LocaleTextCustomFieldConfig = CustomField & {
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     internal?: Maybe<Scalars['Boolean']['output']>;
     label?: Maybe<Array<LocalizedString>>;
@@ -4509,6 +4526,18 @@ export type ProductOption = Node & {
     updatedAt: Scalars['DateTime']['output'];
 };
 
+export type ProductOptionFilterParameter = {
+    _and?: InputMaybe<Array<ProductOptionFilterParameter>>;
+    _or?: InputMaybe<Array<ProductOptionFilterParameter>>;
+    code?: InputMaybe<StringOperators>;
+    createdAt?: InputMaybe<DateOperators>;
+    groupId?: InputMaybe<IdOperators>;
+    id?: InputMaybe<IdOperators>;
+    languageCode?: InputMaybe<StringOperators>;
+    name?: InputMaybe<StringOperators>;
+    updatedAt?: InputMaybe<DateOperators>;
+};
+
 export type ProductOptionGroup = Node & {
     code: Scalars['String']['output'];
     createdAt: Scalars['DateTime']['output'];
@@ -4541,6 +4570,33 @@ export type ProductOptionInUseError = ErrorResult & {
     message: Scalars['String']['output'];
     optionGroupCode: Scalars['String']['output'];
     productVariantCount: Scalars['Int']['output'];
+};
+
+export type ProductOptionList = PaginatedList & {
+    items: Array<ProductOption>;
+    totalItems: Scalars['Int']['output'];
+};
+
+export type ProductOptionListOptions = {
+    /** Allows the results to be filtered */
+    filter?: InputMaybe<ProductOptionFilterParameter>;
+    /** Specifies whether multiple top-level "filter" fields should be combined with a logical AND or OR operation. Defaults to AND. */
+    filterOperator?: InputMaybe<LogicalOperator>;
+    /** Skips the first n results, for use in pagination */
+    skip?: InputMaybe<Scalars['Int']['input']>;
+    /** Specifies which properties to sort the results by */
+    sort?: InputMaybe<ProductOptionSortParameter>;
+    /** Takes n results, for use in pagination */
+    take?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type ProductOptionSortParameter = {
+    code?: InputMaybe<SortOrder>;
+    createdAt?: InputMaybe<SortOrder>;
+    groupId?: InputMaybe<SortOrder>;
+    id?: InputMaybe<SortOrder>;
+    name?: InputMaybe<SortOrder>;
+    updatedAt?: InputMaybe<SortOrder>;
 };
 
 export type ProductOptionTranslation = {
@@ -4909,8 +4965,10 @@ export type Query = {
     previewCollectionVariants: ProductVariantList;
     /** Get a Product either by id or slug. If neither id nor slug is specified, an error will result. */
     product?: Maybe<Product>;
+    productOption?: Maybe<ProductOption>;
     productOptionGroup?: Maybe<ProductOptionGroup>;
     productOptionGroups: Array<ProductOptionGroup>;
+    productOptions: ProductOptionList;
     /** Get a ProductVariant by id */
     productVariant?: Maybe<ProductVariant>;
     /** List ProductVariants either all or for the specific product. */
@@ -4933,6 +4991,8 @@ export type Query = {
     shippingEligibilityCheckers: Array<ConfigurableOperationDefinition>;
     shippingMethod?: Maybe<ShippingMethod>;
     shippingMethods: ShippingMethodList;
+    /** Generate slug for entity */
+    slugForEntity: Scalars['String']['output'];
     stockLocation?: Maybe<StockLocation>;
     stockLocations: StockLocationList;
     tag: Tag;
@@ -5078,12 +5138,21 @@ export type QueryProductArgs = {
     slug?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type QueryProductOptionArgs = {
+    id: Scalars['ID']['input'];
+};
+
 export type QueryProductOptionGroupArgs = {
     id: Scalars['ID']['input'];
 };
 
 export type QueryProductOptionGroupsArgs = {
     filterTerm?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type QueryProductOptionsArgs = {
+    groupId?: InputMaybe<Scalars['ID']['input']>;
+    options?: InputMaybe<ProductOptionListOptions>;
 };
 
 export type QueryProductVariantArgs = {
@@ -5141,6 +5210,10 @@ export type QueryShippingMethodArgs = {
 
 export type QueryShippingMethodsArgs = {
     options?: InputMaybe<ShippingMethodListOptions>;
+};
+
+export type QuerySlugForEntityArgs = {
+    input: SlugForEntityInput;
 };
 
 export type QueryStockLocationArgs = {
@@ -5300,6 +5373,8 @@ export type RegionTranslation = {
 };
 
 export type RelationCustomFieldConfig = CustomField & {
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     entity: Scalars['String']['output'];
     internal?: Maybe<Scalars['Boolean']['output']>;
@@ -5717,6 +5792,13 @@ export type SinglePrice = {
     value: Scalars['Money']['output'];
 };
 
+export type SlugForEntityInput = {
+    entityId?: InputMaybe<Scalars['ID']['input']>;
+    entityName: Scalars['String']['input'];
+    fieldName: Scalars['String']['input'];
+    inputValue: Scalars['String']['input'];
+};
+
 export enum SortOrder {
     ASC = 'ASC',
     DESC = 'DESC',
@@ -5826,6 +5908,8 @@ export enum StockMovementType {
 }
 
 export type StringCustomFieldConfig = CustomField & {
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     internal?: Maybe<Scalars['Boolean']['output']>;
     label?: Maybe<Array<LocalizedString>>;
@@ -5876,6 +5960,8 @@ export type StringStructFieldConfig = StructField & {
 };
 
 export type StructCustomFieldConfig = CustomField & {
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     fields: Array<StructFieldConfig>;
     internal?: Maybe<Scalars['Boolean']['output']>;
@@ -6038,12 +6124,14 @@ export type TaxRate = Node & {
 export type TaxRateFilterParameter = {
     _and?: InputMaybe<Array<TaxRateFilterParameter>>;
     _or?: InputMaybe<Array<TaxRateFilterParameter>>;
+    categoryId?: InputMaybe<IdOperators>;
     createdAt?: InputMaybe<DateOperators>;
     enabled?: InputMaybe<BooleanOperators>;
     id?: InputMaybe<IdOperators>;
     name?: InputMaybe<StringOperators>;
     updatedAt?: InputMaybe<DateOperators>;
     value?: InputMaybe<NumberOperators>;
+    zoneId?: InputMaybe<IdOperators>;
 };
 
 export type TaxRateList = PaginatedList & {
@@ -6101,6 +6189,8 @@ export type TestShippingMethodResult = {
 };
 
 export type TextCustomFieldConfig = CustomField & {
+    deprecated?: Maybe<Scalars['Boolean']['output']>;
+    deprecationReason?: Maybe<Scalars['String']['output']>;
     description?: Maybe<Array<LocalizedString>>;
     internal?: Maybe<Scalars['Boolean']['output']>;
     label?: Maybe<Array<LocalizedString>>;
@@ -6731,7 +6821,9 @@ export type UpdateGlobalLanguagesMutationVariables = Exact<{
 }>;
 
 export type UpdateGlobalLanguagesMutation = {
-    updateGlobalSettings: { id: string; availableLanguages: Array<LanguageCode> } | {};
+    updateGlobalSettings:
+        | { id: string; availableLanguages: Array<LanguageCode> }
+        | Record<PropertyKey, never>;
 };
 
 export type GetCollectionsWithAssetsQueryVariables = Exact<{ [key: string]: never }>;
@@ -9761,6 +9853,30 @@ export type GetStockMovementQuery = {
     } | null;
 };
 
+export type GetStockMovementByTypeQueryVariables = Exact<{
+    id: Scalars['ID']['input'];
+    type: StockMovementType;
+}>;
+
+export type GetStockMovementByTypeQuery = {
+    product?: {
+        id: string;
+        variants: Array<{
+            stockMovements: {
+                totalItems: number;
+                items: Array<
+                    | { id: string; type: StockMovementType; quantity: number }
+                    | { id: string; type: StockMovementType; quantity: number }
+                    | { id: string; type: StockMovementType; quantity: number }
+                    | { id: string; type: StockMovementType; quantity: number }
+                    | { id: string; type: StockMovementType; quantity: number }
+                    | { id: string; type: StockMovementType; quantity: number }
+                >;
+            };
+        }>;
+    } | null;
+};
+
 export type GetRunningJobsQueryVariables = Exact<{
     options?: InputMaybe<JobListOptions>;
 }>;
@@ -11540,6 +11656,21 @@ export type GetTaxRateListQuery = {
     };
 };
 
+export type OrderAssetEdgeCaseQueryVariables = Exact<{
+    id: Scalars['ID']['input'];
+}>;
+
+export type OrderAssetEdgeCaseQuery = {
+    order?: { id: string; lines: Array<{ id: string; featuredAsset?: { preview: string } | null }> } | null;
+};
+
+export type OrderDetailFragment = {
+    id: string;
+    lines: Array<{ id: string; featuredAsset?: { preview: string } | null }>;
+};
+
+export type OrderLineFragment = { id: string; featuredAsset?: { preview: string } | null };
+
 export type GetOrderWithLineCalculatedPropsQueryVariables = Exact<{
     id: Scalars['ID']['input'];
 }>;
@@ -11960,6 +12091,12 @@ export type CreateProductOptionMutation = {
     };
 };
 
+export type GetProductOptionQueryVariables = Exact<{
+    id: Scalars['ID']['input'];
+}>;
+
+export type GetProductOptionQuery = { productOption?: { id: string; name: string; code: string } | null };
+
 export type UpdateProductOptionMutationVariables = Exact<{
     input: UpdateProductOptionInput;
 }>;
@@ -11974,6 +12111,18 @@ export type DeleteProductOptionMutationVariables = Exact<{
 
 export type DeleteProductOptionMutation = {
     deleteProductOption: { result: DeletionResult; message?: string | null };
+};
+
+export type GetProductOptionsQueryVariables = Exact<{
+    groupId?: InputMaybe<Scalars['ID']['input']>;
+    options?: InputMaybe<ProductOptionListOptions>;
+}>;
+
+export type GetProductOptionsQuery = {
+    productOptions: {
+        totalItems: number;
+        items: Array<{ id: string; code: string; name: string; groupId: string }>;
+    };
 };
 
 export type RemoveOptionGroupFromProductMutationVariables = Exact<{
@@ -12198,12 +12347,6 @@ export type GetSettingsStoreValueQueryVariables = Exact<{
 
 export type GetSettingsStoreValueQuery = { getSettingsStoreValue?: any | null };
 
-export type GetSettingsStoreValuesQueryVariables = Exact<{
-    keys: Array<Scalars['String']['input']> | Scalars['String']['input'];
-}>;
-
-export type GetSettingsStoreValuesQuery = { getSettingsStoreValues?: any | null };
-
 export type SetSettingsStoreValueMutationVariables = Exact<{
     input: SettingsStoreInput;
 }>;
@@ -12211,6 +12354,12 @@ export type SetSettingsStoreValueMutationVariables = Exact<{
 export type SetSettingsStoreValueMutation = {
     setSettingsStoreValue: { key: string; result: boolean; error?: string | null };
 };
+
+export type GetSettingsStoreValuesQueryVariables = Exact<{
+    keys: Array<Scalars['String']['input']> | Scalars['String']['input'];
+}>;
+
+export type GetSettingsStoreValuesQuery = { getSettingsStoreValues?: any | null };
 
 export type SetSettingsStoreValuesMutationVariables = Exact<{
     inputs: Array<SettingsStoreInput> | SettingsStoreInput;
@@ -12375,6 +12524,12 @@ export type GetVariantFacetValuesQuery = {
 export type GetCustomerIdsQueryVariables = Exact<{ [key: string]: never }>;
 
 export type GetCustomerIdsQuery = { customers: { items: Array<{ id: string }> } };
+
+export type SlugForEntityQueryVariables = Exact<{
+    input: SlugForEntityInput;
+}>;
+
+export type SlugForEntityQuery = { slugForEntity: string };
 
 export type StockLocationFragment = { id: string; name: string; description: string };
 
@@ -12647,6 +12802,12 @@ export type DeleteTaxRateMutationVariables = Exact<{
 }>;
 
 export type DeleteTaxRateMutation = { deleteTaxRate: { result: DeletionResult; message?: string | null } };
+
+export type CreateFacetWithValueMutationVariables = Exact<{
+    input: CreateFacetInput;
+}>;
+
+export type CreateFacetWithValueMutation = { createFacet: { id: string; name: string } };
 
 export type DeleteZoneMutationVariables = Exact<{
     id: Scalars['ID']['input'];
@@ -15206,6 +15367,75 @@ export const OrderWithModificationsFragmentDoc = {
         },
     ],
 } as unknown as DocumentNode<OrderWithModificationsFragment, unknown>;
+export const OrderLineFragmentDoc = {
+    kind: 'Document',
+    definitions: [
+        {
+            kind: 'FragmentDefinition',
+            name: { kind: 'Name', value: 'OrderLine' },
+            typeCondition: { kind: 'NamedType', name: { kind: 'Name', value: 'OrderLine' } },
+            selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                    { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'featuredAsset' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [{ kind: 'Field', name: { kind: 'Name', value: 'preview' } }],
+                        },
+                    },
+                ],
+            },
+        },
+    ],
+} as unknown as DocumentNode<OrderLineFragment, unknown>;
+export const OrderDetailFragmentDoc = {
+    kind: 'Document',
+    definitions: [
+        {
+            kind: 'FragmentDefinition',
+            name: { kind: 'Name', value: 'OrderDetail' },
+            typeCondition: { kind: 'NamedType', name: { kind: 'Name', value: 'Order' } },
+            selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                    { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lines' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [
+                                { kind: 'FragmentSpread', name: { kind: 'Name', value: 'OrderLine' } },
+                            ],
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            kind: 'FragmentDefinition',
+            name: { kind: 'Name', value: 'OrderLine' },
+            typeCondition: { kind: 'NamedType', name: { kind: 'Name', value: 'OrderLine' } },
+            selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                    { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'featuredAsset' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [{ kind: 'Field', name: { kind: 'Name', value: 'preview' } }],
+                        },
+                    },
+                ],
+            },
+        },
+    ],
+} as unknown as DocumentNode<OrderDetailFragment, unknown>;
 export const RefundFragmentDoc = {
     kind: 'Document',
     definitions: [
@@ -27294,6 +27524,142 @@ export const GetStockMovementDocument = {
         },
     ],
 } as unknown as DocumentNode<GetStockMovementQuery, GetStockMovementQueryVariables>;
+export const GetStockMovementByTypeDocument = {
+    kind: 'Document',
+    definitions: [
+        {
+            kind: 'OperationDefinition',
+            operation: 'query',
+            name: { kind: 'Name', value: 'GetStockMovementByType' },
+            variableDefinitions: [
+                {
+                    kind: 'VariableDefinition',
+                    variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+                    type: {
+                        kind: 'NonNullType',
+                        type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+                    },
+                },
+                {
+                    kind: 'VariableDefinition',
+                    variable: { kind: 'Variable', name: { kind: 'Name', value: 'type' } },
+                    type: {
+                        kind: 'NonNullType',
+                        type: { kind: 'NamedType', name: { kind: 'Name', value: 'StockMovementType' } },
+                    },
+                },
+            ],
+            selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'product' },
+                        arguments: [
+                            {
+                                kind: 'Argument',
+                                name: { kind: 'Name', value: 'id' },
+                                value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+                            },
+                        ],
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [
+                                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                                {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'variants' },
+                                    selectionSet: {
+                                        kind: 'SelectionSet',
+                                        selections: [
+                                            {
+                                                kind: 'Field',
+                                                name: { kind: 'Name', value: 'stockMovements' },
+                                                arguments: [
+                                                    {
+                                                        kind: 'Argument',
+                                                        name: { kind: 'Name', value: 'options' },
+                                                        value: {
+                                                            kind: 'ObjectValue',
+                                                            fields: [
+                                                                {
+                                                                    kind: 'ObjectField',
+                                                                    name: { kind: 'Name', value: 'type' },
+                                                                    value: {
+                                                                        kind: 'Variable',
+                                                                        name: { kind: 'Name', value: 'type' },
+                                                                    },
+                                                                },
+                                                            ],
+                                                        },
+                                                    },
+                                                ],
+                                                selectionSet: {
+                                                    kind: 'SelectionSet',
+                                                    selections: [
+                                                        {
+                                                            kind: 'Field',
+                                                            name: { kind: 'Name', value: 'items' },
+                                                            selectionSet: {
+                                                                kind: 'SelectionSet',
+                                                                selections: [
+                                                                    {
+                                                                        kind: 'InlineFragment',
+                                                                        typeCondition: {
+                                                                            kind: 'NamedType',
+                                                                            name: {
+                                                                                kind: 'Name',
+                                                                                value: 'StockMovement',
+                                                                            },
+                                                                        },
+                                                                        selectionSet: {
+                                                                            kind: 'SelectionSet',
+                                                                            selections: [
+                                                                                {
+                                                                                    kind: 'Field',
+                                                                                    name: {
+                                                                                        kind: 'Name',
+                                                                                        value: 'id',
+                                                                                    },
+                                                                                },
+                                                                                {
+                                                                                    kind: 'Field',
+                                                                                    name: {
+                                                                                        kind: 'Name',
+                                                                                        value: 'type',
+                                                                                    },
+                                                                                },
+                                                                                {
+                                                                                    kind: 'Field',
+                                                                                    name: {
+                                                                                        kind: 'Name',
+                                                                                        value: 'quantity',
+                                                                                    },
+                                                                                },
+                                                                            ],
+                                                                        },
+                                                                    },
+                                                                ],
+                                                            },
+                                                        },
+                                                        {
+                                                            kind: 'Field',
+                                                            name: { kind: 'Name', value: 'totalItems' },
+                                                        },
+                                                    ],
+                                                },
+                                            },
+                                        ],
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                ],
+            },
+        },
+    ],
+} as unknown as DocumentNode<GetStockMovementByTypeQuery, GetStockMovementByTypeQueryVariables>;
 export const GetRunningJobsDocument = {
     kind: 'Document',
     definitions: [
@@ -34636,6 +35002,96 @@ export const GetTaxRateListDocument = {
         },
     ],
 } as unknown as DocumentNode<GetTaxRateListQuery, GetTaxRateListQueryVariables>;
+export const OrderAssetEdgeCaseDocument = {
+    kind: 'Document',
+    definitions: [
+        {
+            kind: 'OperationDefinition',
+            operation: 'query',
+            name: { kind: 'Name', value: 'OrderAssetEdgeCase' },
+            variableDefinitions: [
+                {
+                    kind: 'VariableDefinition',
+                    variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+                    type: {
+                        kind: 'NonNullType',
+                        type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+                    },
+                },
+            ],
+            selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'order' },
+                        arguments: [
+                            {
+                                kind: 'Argument',
+                                name: { kind: 'Name', value: 'id' },
+                                value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+                            },
+                        ],
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [
+                                {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'lines' },
+                                    selectionSet: {
+                                        kind: 'SelectionSet',
+                                        selections: [{ kind: 'Field', name: { kind: 'Name', value: 'id' } }],
+                                    },
+                                },
+                                { kind: 'FragmentSpread', name: { kind: 'Name', value: 'OrderDetail' } },
+                            ],
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            kind: 'FragmentDefinition',
+            name: { kind: 'Name', value: 'OrderLine' },
+            typeCondition: { kind: 'NamedType', name: { kind: 'Name', value: 'OrderLine' } },
+            selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                    { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'featuredAsset' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [{ kind: 'Field', name: { kind: 'Name', value: 'preview' } }],
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            kind: 'FragmentDefinition',
+            name: { kind: 'Name', value: 'OrderDetail' },
+            typeCondition: { kind: 'NamedType', name: { kind: 'Name', value: 'Order' } },
+            selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                    { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lines' },
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [
+                                { kind: 'FragmentSpread', name: { kind: 'Name', value: 'OrderLine' } },
+                            ],
+                        },
+                    },
+                ],
+            },
+        },
+    ],
+} as unknown as DocumentNode<OrderAssetEdgeCaseQuery, OrderAssetEdgeCaseQueryVariables>;
 export const GetOrderWithLineCalculatedPropsDocument = {
     kind: 'Document',
     definitions: [
@@ -36567,6 +37023,50 @@ export const CreateProductOptionDocument = {
         },
     ],
 } as unknown as DocumentNode<CreateProductOptionMutation, CreateProductOptionMutationVariables>;
+export const GetProductOptionDocument = {
+    kind: 'Document',
+    definitions: [
+        {
+            kind: 'OperationDefinition',
+            operation: 'query',
+            name: { kind: 'Name', value: 'GetProductOption' },
+            variableDefinitions: [
+                {
+                    kind: 'VariableDefinition',
+                    variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+                    type: {
+                        kind: 'NonNullType',
+                        type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+                    },
+                },
+            ],
+            selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'productOption' },
+                        arguments: [
+                            {
+                                kind: 'Argument',
+                                name: { kind: 'Name', value: 'id' },
+                                value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+                            },
+                        ],
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [
+                                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'code' } },
+                            ],
+                        },
+                    },
+                ],
+            },
+        },
+    ],
+} as unknown as DocumentNode<GetProductOptionQuery, GetProductOptionQueryVariables>;
 export const UpdateProductOptionDocument = {
     kind: 'Document',
     definitions: [
@@ -36658,6 +37158,68 @@ export const DeleteProductOptionDocument = {
         },
     ],
 } as unknown as DocumentNode<DeleteProductOptionMutation, DeleteProductOptionMutationVariables>;
+export const GetProductOptionsDocument = {
+    kind: 'Document',
+    definitions: [
+        {
+            kind: 'OperationDefinition',
+            operation: 'query',
+            name: { kind: 'Name', value: 'GetProductOptions' },
+            variableDefinitions: [
+                {
+                    kind: 'VariableDefinition',
+                    variable: { kind: 'Variable', name: { kind: 'Name', value: 'groupId' } },
+                    type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+                },
+                {
+                    kind: 'VariableDefinition',
+                    variable: { kind: 'Variable', name: { kind: 'Name', value: 'options' } },
+                    type: { kind: 'NamedType', name: { kind: 'Name', value: 'ProductOptionListOptions' } },
+                },
+            ],
+            selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'productOptions' },
+                        arguments: [
+                            {
+                                kind: 'Argument',
+                                name: { kind: 'Name', value: 'groupId' },
+                                value: { kind: 'Variable', name: { kind: 'Name', value: 'groupId' } },
+                            },
+                            {
+                                kind: 'Argument',
+                                name: { kind: 'Name', value: 'options' },
+                                value: { kind: 'Variable', name: { kind: 'Name', value: 'options' } },
+                            },
+                        ],
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [
+                                {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'items' },
+                                    selectionSet: {
+                                        kind: 'SelectionSet',
+                                        selections: [
+                                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                                            { kind: 'Field', name: { kind: 'Name', value: 'code' } },
+                                            { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                                            { kind: 'Field', name: { kind: 'Name', value: 'groupId' } },
+                                        ],
+                                    },
+                                },
+                                { kind: 'Field', name: { kind: 'Name', value: 'totalItems' } },
+                            ],
+                        },
+                    },
+                ],
+            },
+        },
+    ],
+} as unknown as DocumentNode<GetProductOptionsQuery, GetProductOptionsQueryVariables>;
 export const RemoveOptionGroupFromProductDocument = {
     kind: 'Document',
     definitions: [
@@ -37690,48 +38252,6 @@ export const GetSettingsStoreValueDocument = {
         },
     ],
 } as unknown as DocumentNode<GetSettingsStoreValueQuery, GetSettingsStoreValueQueryVariables>;
-export const GetSettingsStoreValuesDocument = {
-    kind: 'Document',
-    definitions: [
-        {
-            kind: 'OperationDefinition',
-            operation: 'query',
-            name: { kind: 'Name', value: 'GetSettingsStoreValues' },
-            variableDefinitions: [
-                {
-                    kind: 'VariableDefinition',
-                    variable: { kind: 'Variable', name: { kind: 'Name', value: 'keys' } },
-                    type: {
-                        kind: 'NonNullType',
-                        type: {
-                            kind: 'ListType',
-                            type: {
-                                kind: 'NonNullType',
-                                type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
-                            },
-                        },
-                    },
-                },
-            ],
-            selectionSet: {
-                kind: 'SelectionSet',
-                selections: [
-                    {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'getSettingsStoreValues' },
-                        arguments: [
-                            {
-                                kind: 'Argument',
-                                name: { kind: 'Name', value: 'keys' },
-                                value: { kind: 'Variable', name: { kind: 'Name', value: 'keys' } },
-                            },
-                        ],
-                    },
-                ],
-            },
-        },
-    ],
-} as unknown as DocumentNode<GetSettingsStoreValuesQuery, GetSettingsStoreValuesQueryVariables>;
 export const SetSettingsStoreValueDocument = {
     kind: 'Document',
     definitions: [
@@ -37776,6 +38296,48 @@ export const SetSettingsStoreValueDocument = {
         },
     ],
 } as unknown as DocumentNode<SetSettingsStoreValueMutation, SetSettingsStoreValueMutationVariables>;
+export const GetSettingsStoreValuesDocument = {
+    kind: 'Document',
+    definitions: [
+        {
+            kind: 'OperationDefinition',
+            operation: 'query',
+            name: { kind: 'Name', value: 'GetSettingsStoreValues' },
+            variableDefinitions: [
+                {
+                    kind: 'VariableDefinition',
+                    variable: { kind: 'Variable', name: { kind: 'Name', value: 'keys' } },
+                    type: {
+                        kind: 'NonNullType',
+                        type: {
+                            kind: 'ListType',
+                            type: {
+                                kind: 'NonNullType',
+                                type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+                            },
+                        },
+                    },
+                },
+            ],
+            selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'getSettingsStoreValues' },
+                        arguments: [
+                            {
+                                kind: 'Argument',
+                                name: { kind: 'Name', value: 'keys' },
+                                value: { kind: 'Variable', name: { kind: 'Name', value: 'keys' } },
+                            },
+                        ],
+                    },
+                ],
+            },
+        },
+    ],
+} as unknown as DocumentNode<GetSettingsStoreValuesQuery, GetSettingsStoreValuesQueryVariables>;
 export const SetSettingsStoreValuesDocument = {
     kind: 'Document',
     definitions: [
@@ -38686,6 +39248,42 @@ export const GetCustomerIdsDocument = {
         },
     ],
 } as unknown as DocumentNode<GetCustomerIdsQuery, GetCustomerIdsQueryVariables>;
+export const SlugForEntityDocument = {
+    kind: 'Document',
+    definitions: [
+        {
+            kind: 'OperationDefinition',
+            operation: 'query',
+            name: { kind: 'Name', value: 'SlugForEntity' },
+            variableDefinitions: [
+                {
+                    kind: 'VariableDefinition',
+                    variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+                    type: {
+                        kind: 'NonNullType',
+                        type: { kind: 'NamedType', name: { kind: 'Name', value: 'SlugForEntityInput' } },
+                    },
+                },
+            ],
+            selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'slugForEntity' },
+                        arguments: [
+                            {
+                                kind: 'Argument',
+                                name: { kind: 'Name', value: 'input' },
+                                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+                            },
+                        ],
+                    },
+                ],
+            },
+        },
+    ],
+} as unknown as DocumentNode<SlugForEntityQuery, SlugForEntityQueryVariables>;
 export const GetStockLocationDocument = {
     kind: 'Document',
     definitions: [
@@ -40375,6 +40973,49 @@ export const DeleteTaxRateDocument = {
         },
     ],
 } as unknown as DocumentNode<DeleteTaxRateMutation, DeleteTaxRateMutationVariables>;
+export const CreateFacetWithValueDocument = {
+    kind: 'Document',
+    definitions: [
+        {
+            kind: 'OperationDefinition',
+            operation: 'mutation',
+            name: { kind: 'Name', value: 'CreateFacetWithValue' },
+            variableDefinitions: [
+                {
+                    kind: 'VariableDefinition',
+                    variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+                    type: {
+                        kind: 'NonNullType',
+                        type: { kind: 'NamedType', name: { kind: 'Name', value: 'CreateFacetInput' } },
+                    },
+                },
+            ],
+            selectionSet: {
+                kind: 'SelectionSet',
+                selections: [
+                    {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createFacet' },
+                        arguments: [
+                            {
+                                kind: 'Argument',
+                                name: { kind: 'Name', value: 'input' },
+                                value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+                            },
+                        ],
+                        selectionSet: {
+                            kind: 'SelectionSet',
+                            selections: [
+                                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                            ],
+                        },
+                    },
+                ],
+            },
+        },
+    ],
+} as unknown as DocumentNode<CreateFacetWithValueMutation, CreateFacetWithValueMutationVariables>;
 export const DeleteZoneDocument = {
     kind: 'Document',
     definitions: [

@@ -213,6 +213,7 @@
       "OrderList",
       "PaymentMethodList",
       "ProductList",
+      "ProductOptionList",
       "ProductVariantList",
       "PromotionList",
       "ProvinceList",

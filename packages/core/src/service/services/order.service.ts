@@ -117,6 +117,7 @@ import { RefundState } from '../helpers/refund-state-machine/refund-state';
 import { RefundStateMachine } from '../helpers/refund-state-machine/refund-state-machine';
 import { ShippingCalculator } from '../helpers/shipping-calculator/shipping-calculator';
 import { TranslatorService } from '../helpers/translator/translator.service';
+import { isForeignKeyViolationError } from '../helpers/utils/db-errors';
 import { getOrdersFromLines, totalCoveredByPayments } from '../helpers/utils/order-utils';
 import { patchEntity } from '../helpers/utils/patch-entity';
 
@@ -334,7 +335,7 @@ export class OrderService {
         );
         return this.listQueryBuilder
             .build(Order, options, {
-                relations: relations ?? ['lines', 'customer', 'channels', 'shippingLines'],
+                relations: effectiveRelations,
                 channelId: ctx.channelId,
                 ctx,
             })
@@ -1853,7 +1854,7 @@ export class OrderService {
                       .getRepository(ctx, Order)
                       .findOneOrFail({ where: { id: orderOrId }, relations: ['lines', 'shippingLines'] });
         // If there is a Session referencing the Order to be deleted, we must first remove that
-        // reference in order to avoid a foreign key error. See https://github.com/vendure-ecommerce/vendure/issues/1454
+        // reference in order to avoid a foreign key error. See https://github.com/vendurehq/vendure/issues/1454
         const sessions = await this.connection
             .getRepository(ctx, Session)
             .find({ where: { activeOrderId: orderToDelete.id } });
@@ -1882,14 +1883,45 @@ export class OrderService {
     ): Promise<Order | undefined> {
         if (guestOrder && guestOrder.customer) {
             // In this case the "guest order" is actually an order of an existing Customer,
-            // so we do not want to merge at all. See https://github.com/vendure-ecommerce/vendure/issues/263
+            // so we do not want to merge at all. See https://github.com/vendurehq/vendure/issues/263
             return existingOrder;
         }
         const mergeResult = this.orderMerger.merge(ctx, guestOrder, existingOrder);
         const { orderToDelete, linesToInsert, linesToDelete, linesToModify } = mergeResult;
         let { order } = mergeResult;
         if (orderToDelete) {
-            await this.deleteOrder(ctx, orderToDelete);
+            try {
+                // Separate transaction to isolate foreign key failure, so it doesn't roll back the entire outer transaction
+                await this.connection.withTransaction(ctx, async innerCtx => {
+                    await this.deleteOrder(innerCtx, orderToDelete);
+                });
+            } catch (e: any) {
+                if (!isForeignKeyViolationError(e)) throw e;
+                if (!order)
+                    throw new Error(
+                        `Cannot complete order merge: active order not found, while cancelling order ${orderToDelete.id}`,
+                    );
+
+                // If the order has a foreign key violation (e.g. with cancelled payments),
+                // instead of deleting it we cancel the order and leave a note with an explanation.
+                // This way the previous order and all its information are preserved.
+                await this.cancelOrder(ctx, { orderId: orderToDelete.id });
+
+                const note = [
+                    'This order was cancelled during user sign-in because merging with the active order was not possible.',
+                    `The active order is ${order.code}. This order has been preserved for reference.`,
+                ].join(' ');
+
+                await this.historyService.createHistoryEntryForOrder(
+                    {
+                        ctx,
+                        orderId: orderToDelete.id,
+                        type: HistoryEntryType.ORDER_NOTE,
+                        data: { note },
+                    },
+                    false,
+                );
+            }
         }
         if (order && linesToDelete) {
             const orderId = order.id;
@@ -2092,6 +2124,7 @@ export class OrderService {
                     'sellerOrders',
                     'customer',
                     'modifications',
+                    'customFields',
                 ]),
                 {
                     reload: false,

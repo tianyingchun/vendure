@@ -1,33 +1,26 @@
-import { CustomFieldConfig } from '@vendure/common/lib/generated-types';
-import {
-    ControllerFieldState,
-    ControllerRenderProps,
-    FieldPath,
-    FieldValues,
-    UseFormStateReturn,
-} from 'react-hook-form';
-import { getCustomFormComponent } from './custom-form-component-extensions.js';
+import { getInputComponent } from '@/vdb/framework/extension-api/input-component-extensions.js';
+import { DefaultInputForType } from '@/vdb/framework/form-engine/default-input-for-type.js';
+import { DashboardFormComponentProps } from '@/vdb/framework/form-engine/form-engine-types.js';
 
-export interface CustomFormComponentProps {
-    fieldProps: CustomFormComponentInputProps;
-    fieldDef: Pick<CustomFieldConfig, 'ui' | 'type' | 'name'>;
-}
+const warnedComponents = new Set<string>();
 
-export interface CustomFormComponentInputProps<
-    TFieldValues extends FieldValues = FieldValues,
-    TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
-> {
-    field: ControllerRenderProps<TFieldValues, TName>;
-    fieldState: ControllerFieldState;
-    formState: UseFormStateReturn<TFieldValues>;
-}
-
-export function CustomFormComponent({ fieldDef, fieldProps }: CustomFormComponentProps) {
-    const Component = getCustomFormComponent(fieldDef.ui?.component);
-
-    if (!Component) {
+export function CustomFormComponent(props: DashboardFormComponentProps) {
+    if (!props.fieldDef) {
         return null;
     }
+    const componentId = props.fieldDef.ui?.component;
+    const Component = getInputComponent(componentId);
 
-    return <Component {...fieldProps} />;
+    if (!Component) {
+        if (componentId && !warnedComponents.has(componentId)) {
+            warnedComponents.add(componentId);
+            console.warn(
+                `Custom form component "${componentId}" not found for field "${props.fieldDef.name}". ` +
+                    `Falling back to default input for type "${props.fieldDef.type}".`,
+            );
+        }
+        return <DefaultInputForType {...props} />;
+    }
+
+    return <Component {...props} />;
 }

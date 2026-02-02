@@ -8,8 +8,8 @@ import { NavMenuItem } from '../../nav-menu/nav-menu-extensions.js';
  * @description
  * Defines a custom route for the dashboard with optional navigation menu integration.
  *
- * @docsCategory extensions
- * @docsPage Navigation
+ * @docsCategory extensions-api
+ * @docsPage Routes
  * @since 3.4.0
  */
 export interface DashboardRouteDefinition {
@@ -27,6 +27,10 @@ export interface DashboardRouteDefinition {
      * @description
      * Optional navigation menu item configuration to add this route to the nav menu
      * on the left side of the dashboard.
+     *
+     * The `sectionId` specifies which nav menu section (e.g. "catalog", "customers")
+     * this item should appear in. It can also point to custom nav menu sections that
+     * have been defined using the `navSections` extension property.
      */
     navMenuItem?: Partial<NavMenuItem> & { sectionId: string };
     /**
@@ -35,15 +39,35 @@ export interface DashboardRouteDefinition {
      * The value is a Tanstack Router
      * [loader function](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#route-loaders)
      */
-    loader?: RouteOptions['loader'];
+    loader?: RouteOptions<any>['loader'];
+
+    /**
+     * @description
+     * Optional search parameter validation function.
+     * The value is a Tanstack Router
+     * [validateSearch function](https://tanstack.com/router/latest/docs/framework/react/guide/search-params#search-param-validation)
+     */
+    validateSearch?: RouteOptions<any>['validateSearch'];
+
+    /**
+     * @description
+     * Define if the route should be under the authentication context, i.e have the authenticated route
+     * as a parent.
+     * @default true
+     */
+    authenticated?: boolean;
 }
 
 /**
  * @description
  * Defines a custom navigation section in the dashboard sidebar.
  *
- * @docsCategory extensions
+ * Individual items can then be added to the section by defining routes in the
+ * `routes` property of your Dashboard extension.
+ *
+ * @docsCategory extensions-api
  * @docsPage Navigation
+ * @docsWeight 0
  * @since 3.4.0
  */
 export interface DashboardNavSectionDefinition {
@@ -73,4 +97,9 @@ export interface DashboardNavSectionDefinition {
      * Optional order number to control the position of this section in the sidebar.
      */
     order?: number;
+    /**
+     * @description
+     * Optional placement to control the position of this section in the sidebar.
+     */
+    placement?: 'top' | 'bottom';
 }
